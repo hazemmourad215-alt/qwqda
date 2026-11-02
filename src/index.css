@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Cairo', sans-serif;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden; /* لمنع ظهور سكرول أفقي على الشاشات الصغيره */
+  background-color: #0f172a;
+  color: #f8fafc;
+  direction: rtl;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Scrollbar أنيق */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 4px;
+}

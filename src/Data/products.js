@@ -1,0 +1,22 @@
+export const products = [
+  { id: 1, name: "ساعة يد ذكية مودرن", price: 120, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80", category: "إلكترونيات", description: "ساعة ذكية مقاومة للماء مع تتبع دقيق للصحة والرياضة." },
+  { id: 2, name: "سماعات بلوتوث لاسلكية", price: 85, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80", category: "إلكترونيات", description: "صوت نقي وعزل تام للضوضاء مع بطارية تدوم طويلاً." },
+  { id: 3, name: "حذاء رياضي أنيق", price: 65, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80", category: "ملابس", description: "حذاء مريح جداً للجري والاستخدام اليومي بتصميم عصري." },
+  { id: 4, name: "حقيبة ظهر للسفر", price: 95, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80", category: "إكسسوارات", description: "حقيبة واسعة مقاومة للماء مع منفذ شحن USB مدمج." },
+  { id: 5, name: "كاميرا احترافية ديجيتال", price: 450, image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500&q=80", category: "إلكترونيات", description: "دقة عالية وتصوير احترافي لكل ذكرياتك الجميلة." },
+  { id: 6, name: "نظارة شمسية كلاسيكية", price: 45, image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80", category: "إكسسوارات", description: "حماية كاملة من الأشعة فوق البنفسجية بتصميم أنيق." },
+  { id: 7, name: "جاكيت شتوي أنيق", price: 110, image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80", category: "ملابس", description: "جاكيت دافئ ومريح يناسب جميع الأوقات الباردة." },
+  { id: 8, name: "مكبر صوت بلوتوث مقاوم للماء", price: 75, image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&q=80", category: "إلكترونيات", description: "صوت ستيريو قوي ومثالي للرحلات والحفلات الخارجية." },
+  { id: 9, name: "حزام جلد طبيعي فاخر", price: 35, image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=500&q=80", category: "إكسسوارات", description: "مصنوع من أجود أنواع الجلود ليناسب إطلالتك الرسمية." },
+  { id: 10, name: "قميص كاجوال قطني", price: 40, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=500&q=80", category: "ملابس", description: "قميص قطني مريح ومناسب للاستخدام اليومي." },
+  { id: 11, name: "لابتوب للألعاب فائق السرعة", price: 1200, image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&q=80", category: "إلكترونيات", description: "أداء خارق لتشغيل أثقل الألعاب وبرامج التصميم." },
+  { id: 12, name: "محفظة جلدية رجالية", price: 30, image: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&q=80", category: "إكسسوارات", description: "تصميم أنيق وصغير الحجم مع جيوب متعددة للبطاقات." },
+  { id: 13, name: "بنطلون جينز عصري", price: 55, image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&q=80", category: "ملابس", description: "جينز مرن ومريح يناسب الحركة اليومية." },
+  { id: 14, name: "منبه ذكي لاسلكي", price: 50, image: "https://images.unsplash.com/photo-1584467735811-628a8d42436d?w=500&q=80", category: "إلكترونيات", description: "إضاءة هادئة ومساعد ذكي لتنظيم نومك واستيقاظك." },
+  { id: 15, name: "قبعة شتوية صوفية", price: 20, image: "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=500&q=80", category: "ملابس", description: "قبعة دافئة وأنيقة لأيام الشتاء الباردة." },
+  { id: 16, name: "حذاء كلاسيكي رسمي", price: 90, image: "https://images.unsplash.com/photo-1533867617858-e7d97906a56b?w=500&q=80", category: "أحذية", description: "مصنوع بدقة ليعطيك مظهراً رسمياً وجذاباً في المناسبات." },
+  { id: 17, name: "ماوس لاسلكي جيمينج", price: 40, image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=500&q=80", category: "إلكترونيات", description: "استجابة سريعة وإضاءة RGB رائعة لعشاق الألعاب." },
+  { id: 18, name: "حقيبة يد نسائية فاخرة", price: 130, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&q=80", category: "إكسسوارات", description: "تصميم راقي يواكب أحدث صيحات الموضة النسائية." },
+  { id: 19, name: "تيشيرت رياضي الجري", price: 30, image: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=500&q=80", category: "ملابس", description: "قماش طارد للعرق ومناسب للتمارين الشاقة." },
+  { id: 20, name: "سوار تتبع اللياقة", price: 60, image: "https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=500&q=80", category: "إلكترونيات", description: "راقب نبضات قلبك وخطواتك اليومية بكل سهولة." }
+];
