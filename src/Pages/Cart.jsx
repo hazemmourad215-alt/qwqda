@@ -1,10 +1,12 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { CartContext } from '../context/CartContext';
+import { DashboardContext } from '../context/DashboardContext'; 
 import { Link } from 'react-router-dom';
-import { Trash2, ShoppingBag, CheckCircle, X } from 'lucide-react';
+import { Trash2, ShoppingBag, CheckCircle, X, Plus, Minus, Sparkles } from 'lucide-react';
 
 export default function Cart() {
-  const { cart, removeFromCart, clearCart } = useContext(CartContext);
+  const { cart, removeFromCart, clearCart, updateQuantityPlus, updateQuantityMinus } = useContext(CartContext);
+  const { addOrder } = useContext(DashboardContext); 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({ name: '', address: '', phone: '' });
@@ -17,7 +19,17 @@ export default function Cart() {
   }, []);
 
   const isMobile = windowWidth <= 768;
-  const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+
+  const subTotal = cart.reduce((total, item) => {
+    const cleanPrice = typeof item.price === 'string' 
+      ? parseFloat(item.price.replace(/[^\d.]/g, '')) 
+      : Number(item.price);
+    const qty = Number(item.quantity) || 1;
+    return total + (cleanPrice * qty);
+  }, 0);
+
+  const shippingCost = subTotal >= 3000 || subTotal === 0 ? 0 : 50;
+  const totalPrice = subTotal + shippingCost;
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,236 +37,168 @@ export default function Cart() {
 
   const handlePaymentSubmit = (e) => {
     e.preventDefault();
+    addOrder({
+      customer: formData,
+      products: cart,
+      total: totalPrice
+    });
     setIsSuccess(true);
     setTimeout(() => {
       clearCart();
       setIsSuccess(false);
       setIsCheckoutOpen(false);
+      setFormData({ name: '', address: '', phone: '' });
     }, 3000);
   };
 
   const styles = {
-    container: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: isMobile ? '24px 16px' : '48px 32px',
-      direction: 'rtl'
-    },
-    title: {
-      fontSize: isMobile ? '28px' : '36px',
-      fontWeight: '900',
-      color: '#fff',
-      marginBottom: isMobile ? '24px' : '40px',
-      borderRight: '4px solid #3b82f6',
-      paddingRight: '16px'
-    },
-    grid: {
-      display: 'flex',
-      flexDirection: isMobile ? 'column' : 'row',
-      gap: '32px',
-      alignItems: 'start'
-    },
-    cartList: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      flex: 1,
-      width: '100%'
-    },
-    cartItem: {
-      background: 'rgba(30, 41, 59, 0.6)',
-      backdropFilter: 'blur(8px)',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      padding: '16px',
-      borderRadius: '20px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '16px',
-      width: '100%',
-      boxSizing: 'border-box'
-    },
-    itemImage: {
-      width: isMobile ? '64px' : '80px',
-      height: isMobile ? '64px' : '80px',
-      objectFit: 'cover',
-      borderRadius: '12px',
-      background: '#1e293b'
-    },
-    summaryCard: {
-      background: 'rgba(30, 41, 59, 0.6)',
-      backdropFilter: 'blur(8px)',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      padding: isMobile ? '20px' : '32px',
-      borderRadius: '24px',
-      width: '100%',
-      maxWidth: isMobile ? '100%' : '380px',
-      boxSizing: 'border-box'
-    },
-    summaryRow: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: '12px 0',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-      color: '#cbd5e1'
-    },
-    totalRow: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: '20px 0',
-      fontSize: '20px',
-      fontWeight: '900',
-      color: '#fff'
-    },
-    checkoutBtn: {
-      width: '100%',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-      color: '#fff',
-      border: 'none',
-      padding: '16px',
-      borderRadius: '16px',
-      fontWeight: 'bold',
-      fontSize: '18px',
-      cursor: 'pointer',
-      marginTop: '16px',
-      boxShadow: '0 10px 25px rgba(59, 130, 246, 0.4)'
-    },
-    deleteBtn: {
-      color: '#f43f5e',
-      background: 'transparent',
-      border: 'none',
-      padding: '10px',
-      borderRadius: '12px',
-      cursor: 'pointer'
-    },
-    modalOverlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      background: 'rgba(15, 23, 42, 0.8)',
-      backdropFilter: 'blur(8px)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: isMobile ? 'flex-end' : 'center',
-      zIndex: 1000
-    },
-    modalContent: {
-      background: '#1e293b',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      padding: '32px',
-      borderRadius: isMobile ? '24px 24px 0 0' : '24px',
-      width: '100%',
-      maxWidth: '450px',
-      position: 'relative',
-      boxSizing: 'border-box',
-      maxHeight: isMobile ? '90vh' : 'auto',
-      overflowY: 'auto'
-    },
-    input: {
-      width: '100%',
-      padding: '12px 16px',
-      borderRadius: '12px',
-      background: '#0f172a',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      color: '#fff',
-      marginTop: '8px',
-      marginBottom: '16px',
-      outline: 'none',
-      boxSizing: 'border-box'
-    }
+    container: { maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '24px 16px' : '48px 32px', direction: 'rtl', position: 'relative', color: '#fff' },
+    title: { fontSize: isMobile ? '28px' : '36px', fontWeight: '900', color: '#fff', marginBottom: isMobile ? '24px' : '40px', borderRight: '4px solid #3b82f6', paddingRight: '16px' },
+    grid: { display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '32px', alignItems: 'start', position: 'relative', zIndex: 2 },
+    cartList: { display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, width: '100%' },
+    
+    // 🌟 كروت المنتجات الزجاجية الشفافة الفاخرة
+    cartItem: { background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.06)', padding: '16px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', width: '100%', boxSizing: 'border-box' },
+    itemImage: { width: isMobile ? '64px' : '80px', height: isMobile ? '64px' : '80px', objectFit: 'cover', borderRadius: '16px', background: '#0f172a' },
+    
+    // كبسولة زيادة ونقصان الكمية بتصميم معتم متناسق
+    qtyContainer: { display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '6px 14px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.05)' },
+    qtyBtn: { background: 'transparent', border: 'none', color: '#60a5fa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' },
+    
+    // 🌟 بطاقة ملخص الطلب الزجاجية
+    summaryCard: { background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.06)', padding: isMobile ? '24px' : '32px', borderRadius: '28px', width: '100%', maxWidth: isMobile ? '100%' : '380px', boxSizing: 'border-box' },
+    summaryRow: { display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', color: '#cbd5e1' },
+    totalRow: { display: 'flex', justifyContent: 'space-between', padding: '20px 0', fontSize: '20px', fontWeight: '900', color: '#fff' },
+    checkoutBtn: { width: '100%', background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: '#fff', border: 'none', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '16px', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3)' },
+    deleteBtn: { color: '#f43f5e', background: 'transparent', border: 'none', padding: '10px', borderRadius: '12px', cursor: 'pointer' },
+    
+    // المودال الزجاجي المنبثق
+    modalOverlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: isMobile ? 'flex-end' : 'center', zIndex: 1000 },
+    modalContent: { background: 'rgba(30, 41, 59, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '32px', borderRadius: isMobile ? '24px 24px 0 0' : '28px', width: '100%', maxWidth: '450px', position: 'relative', boxSizing: 'border-box', maxHeight: isMobile ? '90vh' : 'auto', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' },
+    input: { width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', color: '#fff', marginTop: '8px', marginBottom: '16px', outline: 'none', boxSizing: 'border-box' }
   };
 
   if (cart.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: isMobile ? '64px 0' : '96px 0', direction: 'rtl' }}>
-        <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', width: '96px', height: '96px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto', color: '#60a5fa' }}>
+      <div style={{ textAlign: 'center', padding: isMobile ? '64px 0' : '96px 0', direction: 'rtl', position: 'relative' }}>
+        <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', width: '96px', height: '96px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto', color: '#60a5fa' }}>
           <ShoppingBag size={48} />
         </div>
         <h2 style={{ fontSize: isMobile ? '26px' : '32px', fontWeight: '900', color: '#fff' }}>سلة المشتريات فارغة</h2>
-        <p style={{ color: '#94a3b8', marginTop: '8px', marginBottom: '32px', fontSize: isMobile ? '16px' : '18px' }}>
-          يبدو أنك لم تقم بإضافة أي منتجات إلى سلتك بعد.
-        </p>
-        <Link to="/shop" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: '#fff', padding: '14px 32px', borderRadius: '14px', textDecoration: 'none', fontWeight: 'bold' }}>
-          تصفح المنتجات الآن
-        </Link>
+        <p style={{ color: '#94a3b8', marginTop: '8px', marginBottom: '32px', fontSize: isMobile ? '16px' : '18px' }}>يبدو أنك لم تقم بإضافة أي منتجات إلى سلتك بعد.</p>
+        <Link to="/shop" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: '#fff', padding: '14px 32px', borderRadius: '14px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3)' }}>تصفح المنتجات الآن</Link>
       </div>
     );
   }
-
-  return (
+    return (
     <div style={styles.container}>
+      {/* هالات الإضاءة الخلفية الناعمة المتناسقة مع باقي الموقع (Ambient Glow) */}
+      <div style={{ position: 'absolute', top: '50px', right: '10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: '50px', left: '50%', transform: 'translateX(-50%)', width: '350px', height: '350px', background: 'radial-gradient(circle, rgba(167,139,250,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+
       <h1 style={styles.title}>سلة المشتريات</h1>
       <div style={styles.grid}>
+        {/* قائمة المنتجات المضافة */}
         <div style={styles.cartList}>
           {cart.map((item) => (
             <div key={item.id} style={styles.cartItem}>
               <img src={item.image} alt={item.name} style={styles.itemImage} />
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontWeight: 'bold', color: '#fff', fontSize: isMobile ? '16px' : '18px' }}>{item.name}</h3>
-                <p style={{ color: '#60a5fa', fontWeight: '800', marginTop: '4px' }}>
-                  {item.price} جنيه <span style={{ fontSize: '14px', color: '#94a3b8' }}>(الكمية: {item.quantity})</span>
-                </p>
+              
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <h3 style={{ fontWeight: 'bold', color: '#fff', fontSize: isMobile ? '16px' : '18px' }}>{item.name}</h3>
+                  <p style={{ color: '#60a5fa', fontWeight: '800', marginTop: '4px' }}>
+                    {item.price} جنيه
+                  </p>
+                </div>
+
+                {/* أزرار زيادة ونقصان الكمية الذكية */}
+                <div style={styles.qtyContainer}>
+                  <button onClick={() => updateQuantityMinus(item.id)} style={styles.qtyBtn}>
+                    <Minus size={16} />
+                  </button>
+                  <span style={{ fontWeight: 'bold', color: '#fff', minWidth: '20px', textAlign: 'center' }}>
+                    {item.quantity}
+                  </span>
+                  <button onClick={() => updateQuantityPlus(item.id)} style={styles.qtyBtn}>
+                    <Plus size={16} />
+                  </button>
+                </div>
               </div>
+
               <button onClick={() => removeFromCart(item.id)} style={styles.deleteBtn}>
                 <Trash2 size={20} />
               </button>
             </div>
           ))}
-          <button onClick={clearCart} style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', fontWeight: '600', marginTop: '8px' }}>
-            إفراغ السلة بالكامل
-          </button>
+          <button onClick={clearCart} style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', fontWeight: '600', marginTop: '12px' }}>إفراغ السلة بالكامل</button>
         </div>
 
+        {/* بطاقة ملخص الطلب الزجاجية */}
         <div style={styles.summaryCard}>
           <h3 style={{ fontSize: '22px', fontWeight: 'bold', color: '#fff', marginBottom: '20px' }}>ملخص الطلب</h3>
+          
           <div style={styles.summaryRow}>
             <span>المجموع الفرعي</span>
-            <span style={{ fontWeight: 'bold', color: '#fff' }}>{totalPrice} جنيه</span>
+            <span style={{ fontWeight: 'bold', color: '#fff' }}>{subTotal} جنيه</span>
           </div>
+          
           <div style={styles.summaryRow}>
             <span>الشحن</span>
-            <span style={{ color: '#34d399', fontWeight: 'bold' }}>مجاني</span>
+            <span style={{ color: shippingCost === 0 ? '#34d399' : '#ff9f43', fontWeight: 'bold' }}>
+              {shippingCost === 0 ? 'مجاني' : `${shippingCost} جنيه`}
+            </span>
           </div>
+          
           <div style={styles.totalRow}>
             <span>الإجمالي الكلي</span>
             <span style={{ color: '#60a5fa' }}>{totalPrice} جنيه</span>
           </div>
+          
           <button onClick={() => setIsCheckoutOpen(true)} style={styles.checkoutBtn}>إتمام الشراء</button>
         </div>
       </div>
 
-      {/* مودال الدفع الوهمي */}
+      {/* مودال الدفع الزجاجي المنبثق */}
       {isCheckoutOpen && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <button onClick={() => setIsCheckoutOpen(false)} style={{ position: 'absolute', top: '20px', left: '20px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-              <X size={20} />
-            </button>
-
+            <button onClick={() => setIsCheckoutOpen(false)} style={{ position: 'absolute', top: '20px', left: '20px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}><X size={20} /></button>
             {isSuccess ? (
-              <div style={{ textAlign: 'center', padding: '32px 0' }}>
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
                 <CheckCircle size={64} color="#34d399" style={{ margin: '0 auto 16px auto' }} />
-                <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>تم الطلب بنجاح!</h2>
-                <p style={{ color: '#94a3b8', marginTop: '8px' }}>شكراً لتسوقك معنا، سيتم توصيل طلبك قريباً.</p>
+                <h3 style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>تمت العملية بنجاح!</h3>
+                <p style={{ color: '#94a3b8', marginTop: '8px' }}>شكراً لك، تم تسجيل طلبك بنجاح في لوحة التحكم.</p>
               </div>
             ) : (
               <form onSubmit={handlePaymentSubmit}>
-                <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: 'bold', marginBottom: '20px' }}>بيانات الشحن والدفع الوهمي</h2>
+                <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: 'bold', marginBottom: '24px' }}>بيانات الشحن والدفع</h3>
                 
-                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>الاسم الكامل</label>
-                <input type="text" name="name" required value={formData.name} onChange={handleInputChange} style={styles.input} />
-
-                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>عنوان التوصيل</label>
-                <input type="text" name="address" required value={formData.address} onChange={handleInputChange} style={styles.input} />
-
+                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>الاسم بالكامل</label>
+                <input type="text" name="name" required value={formData.name} onChange={handleInputChange} style={styles.input} placeholder="محمد أحمد" />
+                
+                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>العنوان بالتفصيل</label>
+                <input type="text" name="address" required value={formData.address} onChange={handleInputChange} style={styles.input} placeholder="القاهرة، مدينة نصر" />
+                
                 <label style={{ color: '#cbd5e1', fontSize: '14px' }}>رقم الهاتف</label>
-                <input type="text" name="phone" required value={formData.phone} onChange={handleInputChange} style={styles.input} />
-
-                <button type="submit" style={styles.checkoutBtn}>
-                  تأكيد ودفع {totalPrice} جنيه
-                </button>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  required 
+                  value={formData.phone} 
+                  onChange={handleInputChange} 
+                  style={styles.input} 
+                  placeholder="01xxxxxxxxx" 
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                />
+                
+                <div style={{ background: 'rgba(15, 23, 42, 0.4)', padding: '16px', borderRadius: '12px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '14px' }}>طريقة الدفع المتاحة حالياً:</p>
+                  <p style={{ color: '#fff', fontWeight: 'bold', marginTop: '4px' }}>الدفع عند الاستلام</p>
+                </div>
+                <button type="submit" style={styles.checkoutBtn}>تأكيد الطلب بمبلغ {totalPrice} جنيه</button>
               </form>
             )}
           </div>

@@ -8,7 +8,6 @@ export const CartProvider = ({ children }) => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  // حالة الإشعار (الرسالة اللي هتظهر)
   const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
@@ -19,7 +18,7 @@ export const CartProvider = ({ children }) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 2500); // تختفي بعد ثوانٍ معدودة
+    }, 2500);
   };
 
   const addToCart = (product) => {
@@ -30,11 +29,33 @@ export const CartProvider = ({ children }) => {
           item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prevCart, { ...product, quantity: 1 }];
+      const cleanPrice = typeof product.price === 'string' 
+        ? parseFloat(product.price.replace(/[^\d.]/g, '')) 
+        : product.price;
+
+      return [...prevCart, { ...product, price: cleanPrice, quantity: 1 }];
     });
     
-    // إظهار رسالة النجاح
     showToast(`تمت إضافة "${product.name}" إلى السلة بنجاح! 🛒`);
+  };
+  // 🌟 دالة زيادة الكمية (+1) للمنتج داخل السلة
+  const updateQuantityPlus = (id) => {
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+      )
+    );
+  };
+
+  // 🌟 دالة نقصان الكمية (-1) وإذا وصلت لصفر يتم إزالة المنتج تلقائياً
+  const updateQuantityMinus = (id) => {
+    setCart((prevCart) =>
+      prevCart
+        .map((item) =>
+          item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+        )
+        .filter((item) => item.quantity > 0) // حمايه: لو نقص عن 1 يحذفه من السلة فوراً
+    );
   };
 
   const removeFromCart = (id) => {
@@ -48,7 +69,7 @@ export const CartProvider = ({ children }) => {
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, toastMessage }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, toastMessage, updateQuantityPlus, updateQuantityMinus }}>
       {children}
     </CartContext.Provider>
   );

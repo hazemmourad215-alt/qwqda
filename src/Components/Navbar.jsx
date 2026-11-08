@@ -24,25 +24,29 @@ export default function Navbar() {
       top: 0,
       zIndex: 100,
       width: '100%',
-      boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+      boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
     },
     topBar: { 
-      background: 'linear-gradient(90deg, #1e293b 0%, #0f172a 100%)', 
+      background: 'linear-gradient(90deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)', 
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
       color: '#60a5fa', 
-      fontSize: '12px', 
+      fontSize: '13px', 
       textAlign: 'center', 
       padding: '8px 16px', 
-      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-      fontWeight: '600'
+      borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+      fontWeight: '700',
+      letterSpacing: '0.5px'
     },
     nav: { 
       display: 'flex', 
       justifyContent: 'space-between', 
       alignItems: 'center', 
       padding: '16px 24px', 
-      background: 'rgba(15, 23, 42, 0.95)', 
-      backdropFilter: 'blur(16px)', 
-      borderBottom: '1px solid rgba(255, 255, 255, 0.08)', 
+      background: 'rgba(15, 23, 42, 0.4)', 
+      backdropFilter: 'blur(20px)', 
+      WebkitBackdropFilter: 'blur(20px)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.06)', 
       direction: 'rtl'
     },
     logo: { 
@@ -50,49 +54,52 @@ export default function Navbar() {
       alignItems: 'center', 
       gap: '8px', 
       fontSize: '22px', 
-      fontWeight: '900', 
+      fontWeight: '950', 
       color: '#fff', 
-      textDecoration: 'none'
+      textDecoration: 'none',
+      letterSpacing: '-0.5px'
     },
     logoIcon: {
       background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-      padding: '6px',
-      borderRadius: '10px',
+      padding: '8px',
+      borderRadius: '12px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
     },
     linksContainer: { 
       display: isMobile ? 'none' : 'flex', 
-      gap: '8px', 
+      gap: '6px', 
       alignItems: 'center'
     },
     getLinkStyle: ({ isActive }) => ({
       color: isActive ? '#60a5fa' : '#cbd5e1',
-      background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-      border: isActive ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent',
-      padding: '8px 14px',
-      borderRadius: '10px',
+      background: isActive ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
+      border: isActive ? '1px solid rgba(59, 130, 246, 0.25)' : '1px solid transparent',
+      padding: '10px 16px',
+      borderRadius: '12px',
       textDecoration: 'none',
       fontSize: '14px',
-      fontWeight: '600',
+      fontWeight: '700',
       display: 'flex',
       alignItems: 'center',
-      gap: '6px',
-      transition: '0.3s'
+      gap: '8px',
+      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
     }),
     cartBtn: { 
       display: 'flex', 
       alignItems: 'center', 
       gap: '8px', 
       background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', 
-      padding: '8px 16px', 
+      padding: '10px 20px', 
       borderRadius: '50px', 
       color: '#fff', 
       textDecoration: 'none', 
       fontSize: '14px', 
       fontWeight: 'bold', 
-      position: 'relative'
+      position: 'relative',
+      boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
     },
     badge: { 
       background: '#f43f5e', 
@@ -118,14 +125,16 @@ export default function Navbar() {
     mobileMenu: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '10px',
-      background: 'rgba(15, 23, 42, 0.98)',
-      backdropFilter: 'blur(16px)',
-      padding: '20px',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      gap: '12px',
+      background: 'rgba(15, 23, 42, 0.6)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      padding: '24px',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
       direction: 'rtl',
       width: '100%',
-      boxShadow: '0 15px 30px rgba(0,0,0,0.5)'
+      boxSizing: 'border-box',
+      boxShadow: '0 15px 30px rgba(0,0,0,0.4)'
     }
   };
 
@@ -136,7 +145,7 @@ export default function Navbar() {
         {/* الشعار على اليمين */}
         <Link to="/" style={styles.logo}>
           <div style={styles.logoIcon}>
-            <Store size={20} color="#fff" />
+            <Store size={18} color="#fff" />
           </div>
           Nex<span style={{ color: '#60a5fa' }}>Store</span>
         </Link>
@@ -152,7 +161,7 @@ export default function Navbar() {
         {/* الأيقونات الجانبية (زر القائمة + زر السلة) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={() => setIsOpen(!isOpen)} style={styles.menuBtn}>
-            {isOpen ? <X size={26} /> : <Menu size={26} />}
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
           <Link to="/cart" style={styles.cartBtn}>
@@ -163,7 +172,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* قائمة الموبايل المنسدلة تظهر بانتظام تحت الناف بار فوراً */}
+      {/* قائمة الموبايل المنسدلة تظهر بانتظام وتأثير الزجاج الشفاف تحت الناف بار فوراً */}
       {isOpen && isMobile && (
         <div style={styles.mobileMenu}>
           <NavLink to="/" onClick={() => setIsOpen(false)} style={styles.getLinkStyle} end><Home size={18} /> الرئيسية</NavLink>

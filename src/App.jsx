@@ -5,6 +5,7 @@ import Navbar from './Components/Navbar';
 import Footer from './Components/Footer';
 import Toast from './Components/Toast';
 import ScrollToTop from './Components/ScrollToTop';
+import Dashboard from './Pages/Dashboard';
 
 import Home from './Pages/Home';
 import Shop from './Pages/Shop';
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="*" element={<NotFound />} />
+              <Route path="/admin/dashboard" element={<Dashboard />} />
             </Routes>
           </main>
           <Footer />

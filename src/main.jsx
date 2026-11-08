@@ -1,10 +1,16 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx'; // 🌟 تأكد من وجود هذا السطر ومساره الصحيح
+import { DashboardProvider } from './context/DashboardContext';
+import { CartProvider } from './context/CartContext';
+import './index.css'; // أو ملف الاستايل الخاص بك
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <DashboardProvider>
+      <CartProvider>
+        <App />
+      </CartProvider>
+    </DashboardProvider>
+  </React.StrictMode>
+);
