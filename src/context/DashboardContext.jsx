@@ -6,12 +6,16 @@ export const DashboardContext = createContext();
 export const DashboardProvider = ({ children }) => {
   const [products, setProducts] = useState(() => {
     const savedProducts = localStorage.getItem('store_products');
-    // إضافة سعر تكلفة افتراضي للمنتجات القديمة لتجنب الأخطاء البرمجية
     if (savedProducts) {
       const parsed = JSON.parse(savedProducts);
-      return parsed.map(p => ({ ...p, costPrice: p.costPrice || Math.round(Number(p.price) * 0.7) }));
+      return parsed.map(p => ({ 
+        ...p, 
+        costPrice: p.costPrice || Math.round(Number(p.price) * 0.7), 
+        discount: Number(p.discount) || 0,
+        isNewBadge: p.isNewBadge !== undefined ? p.isNewBadge : true // حفظ شارة جديد الافتراضية
+      }));
     }
-    return initialProducts.map(p => ({ ...p, costPrice: p.costPrice || Math.round(Number(p.price) * 0.7) }));
+    return initialProducts.map(p => ({ ...p, costPrice: p.costPrice || Math.round(Number(p.price) * 0.7), discount: 0, isNewBadge: true }));
   });
 
   const [orders, setOrders] = useState(() => {
@@ -36,13 +40,14 @@ export const DashboardProvider = ({ children }) => {
     localStorage.setItem('store_messages', JSON.stringify(messages));
   }, [messages]);
 
-  // 🌟 تعديل دالة الإضافة لتشمل تكلفة المنتج الأصلي
   const addProduct = (newProduct) => {
     setProducts((prev) => [...prev, { 
       ...newProduct, 
       id: Date.now(),
       price: Number(newProduct.price),
-      costPrice: Number(newProduct.costPrice) // سعر الجملة/التكلفة
+      costPrice: Number(newProduct.costPrice),
+      discount: Number(newProduct.discount) || 0,
+      isNewBadge: newProduct.isNewBadge // حفظ الاختيار اليدوي للشارة
     }]);
   };
 
@@ -55,11 +60,10 @@ export const DashboardProvider = ({ children }) => {
       id: `ORD-${Date.now()}`,
       date: new Date().toLocaleDateString('ar-EG'),
       customer: orderData.customer,
-      // 🌟 حفظ سعر التكلفة والبيع للمنتجات وقت الشراء بدقة لحساب الأرباح لاحقاً
       products: orderData.products.map(item => ({
         id: item.id,
         name: item.name,
-        price: Number(item.price),
+        price: item.discount > 0 ? Math.round(Number(item.price) * (1 - Number(item.discount) / 100)) : Number(item.price),
         costPrice: Number(item.costPrice) || Math.round(Number(item.price) * 0.7),
         quantity: item.quantity,
         category: item.category

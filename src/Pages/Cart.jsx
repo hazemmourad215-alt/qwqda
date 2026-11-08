@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { CartContext } from '../context/CartContext';
 import { DashboardContext } from '../context/DashboardContext'; 
 import { Link } from 'react-router-dom';
-import { Trash2, ShoppingBag, CheckCircle, X, Plus, Minus, Sparkles } from 'lucide-react';
+import { Trash2, ShoppingBag, CheckCircle, X, Plus, Minus } from 'lucide-react';
 
 export default function Cart() {
   const { cart, removeFromCart, clearCart, updateQuantityPlus, updateQuantityMinus } = useContext(CartContext);
@@ -20,6 +20,7 @@ export default function Cart() {
 
   const isMobile = windowWidth <= 768;
 
+  // 1. حساب المجموع الفرعي (الأسعار النهائية المضافة بالفعل للسلة)
   const subTotal = cart.reduce((total, item) => {
     const cleanPrice = typeof item.price === 'string' 
       ? parseFloat(item.price.replace(/[^\d.]/g, '')) 
@@ -28,7 +29,28 @@ export default function Cart() {
     return total + (cleanPrice * qty);
   }, 0);
 
+  // 2. حساب إجمالي الخصم/التوفير اللي الزبون كسبه (الفارق بين السعر الأصلي والمخفض)
+  const totalDiscount = cart.reduce((total, item) => {
+    const discountPercent = Number(item.discount) || 0;
+    if (discountPercent > 0) {
+      const savedProducts = JSON.parse(localStorage.getItem('store_products')) || [];
+      const originalProduct = savedProducts.find(p => p.id === item.id);
+      const originalPrice = originalProduct ? Number(originalProduct.price) : (item.price / (1 - discountPercent / 100));
+      
+      const cleanPrice = typeof item.price === 'string' 
+        ? parseFloat(item.price.replace(/[^\d.]/g, '')) 
+        : Number(item.price);
+      
+      const savingsPerItem = Math.max(0, Math.round(originalPrice - cleanPrice));
+      return total + (savingsPerItem * (Number(item.quantity) || 1));
+    }
+    return total;
+  }, 0);
+
+  // 3. تحديد مصاريف الشحن ديناميكياً
   const shippingCost = subTotal >= 3000 || subTotal === 0 ? 0 : 50;
+
+  // 4. المجموع الكلي النهائي
   const totalPrice = subTotal + shippingCost;
 
   const handleInputChange = (e) => {
@@ -56,23 +78,15 @@ export default function Cart() {
     title: { fontSize: isMobile ? '28px' : '36px', fontWeight: '900', color: '#fff', marginBottom: isMobile ? '24px' : '40px', borderRight: '4px solid #3b82f6', paddingRight: '16px' },
     grid: { display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '32px', alignItems: 'start', position: 'relative', zIndex: 2 },
     cartList: { display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, width: '100%' },
-    
-    // 🌟 كروت المنتجات الزجاجية الشفافة الفاخرة
     cartItem: { background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.06)', padding: '16px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', width: '100%', boxSizing: 'border-box' },
     itemImage: { width: isMobile ? '64px' : '80px', height: isMobile ? '64px' : '80px', objectFit: 'cover', borderRadius: '16px', background: '#0f172a' },
-    
-    // كبسولة زيادة ونقصان الكمية بتصميم معتم متناسق
     qtyContainer: { display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '6px 14px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.05)' },
     qtyBtn: { background: 'transparent', border: 'none', color: '#60a5fa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' },
-    
-    // 🌟 بطاقة ملخص الطلب الزجاجية
     summaryCard: { background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.06)', padding: isMobile ? '24px' : '32px', borderRadius: '28px', width: '100%', maxWidth: isMobile ? '100%' : '380px', boxSizing: 'border-box' },
     summaryRow: { display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', color: '#cbd5e1' },
     totalRow: { display: 'flex', justifyContent: 'space-between', padding: '20px 0', fontSize: '20px', fontWeight: '900', color: '#fff' },
     checkoutBtn: { width: '100%', background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: '#fff', border: 'none', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '16px', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3)' },
     deleteBtn: { color: '#f43f5e', background: 'transparent', border: 'none', padding: '10px', borderRadius: '12px', cursor: 'pointer' },
-    
-    // المودال الزجاجي المنبثق
     modalOverlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: isMobile ? 'flex-end' : 'center', zIndex: 1000 },
     modalContent: { background: 'rgba(30, 41, 59, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '32px', borderRadius: isMobile ? '24px 24px 0 0' : '28px', width: '100%', maxWidth: '450px', position: 'relative', boxSizing: 'border-box', maxHeight: isMobile ? '90vh' : 'auto', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' },
     input: { width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', color: '#fff', marginTop: '8px', marginBottom: '16px', outline: 'none', boxSizing: 'border-box' }
@@ -90,9 +104,9 @@ export default function Cart() {
       </div>
     );
   }
-    return (
+  return (
     <div style={styles.container}>
-      {/* هالات الإضاءة الخلفية الناعمة المتناسقة مع باقي الموقع (Ambient Glow) */}
+      {/* هالات الإضاءة الخلفية الناعمة */}
       <div style={{ position: 'absolute', top: '50px', right: '10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'absolute', bottom: '50px', left: '50%', transform: 'translateX(-50%)', width: '350px', height: '350px', background: 'radial-gradient(circle, rgba(167,139,250,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
@@ -149,6 +163,14 @@ export default function Cart() {
               {shippingCost === 0 ? 'مجاني' : `${shippingCost} جنيه`}
             </span>
           </div>
+
+          {/* 🌟 سطر إجمالي الخصم والتوفير الجديد مضاف هنا تحت الشحن مباشرة */}
+          {totalDiscount > 0 && (
+            <div style={{ ...styles.summaryRow, borderBottom: '1px solid rgba(244, 63, 94, 0.2)' }}>
+              <span style={{ color: '#f43f5e', fontWeight: '600' }}>إجمالي الخصم (توفير)</span>
+              <span style={{ color: '#ff4d6d', fontWeight: '900' }}>-{totalDiscount} جنيه</span>
+            </div>
+          )}
           
           <div style={styles.totalRow}>
             <span>الإجمالي الكلي</span>
@@ -174,13 +196,13 @@ export default function Cart() {
               <form onSubmit={handlePaymentSubmit}>
                 <h3 style={{ color: '#fff', fontSize: '22px', fontWeight: 'bold', marginBottom: '24px' }}>بيانات الشحن والدفع</h3>
                 
-                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>الاسم بالكامل</label>
+                <label style={{ color: '#cbd5e1', fontSize: '14px', fontWeight: '600' }}>الاسم بالكامل</label>
                 <input type="text" name="name" required value={formData.name} onChange={handleInputChange} style={styles.input} placeholder="محمد أحمد" />
                 
-                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>العنوان بالتفصيل</label>
+                <label style={{ color: '#cbd5e1', fontSize: '14px', fontWeight: '600' }}>العنوان بالتفصيل</label>
                 <input type="text" name="address" required value={formData.address} onChange={handleInputChange} style={styles.input} placeholder="القاهرة، مدينة نصر" />
                 
-                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>رقم الهاتف</label>
+                <label style={{ color: '#cbd5e1', fontSize: '14px', fontWeight: '600' }}>رقم الهاتف</label>
                 <input 
                   type="tel" 
                   name="phone" 
