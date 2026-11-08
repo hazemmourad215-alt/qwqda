@@ -20,38 +20,40 @@ export default function Cart() {
 
   const isMobile = windowWidth <= 768;
 
-  // 1. حساب المجموع الفرعي (الأسعار النهائية المضافة بالفعل للسلة)
+  // 🌟 1. المجموع الفرعي الصحيح: حساب الأسعار الأصلية (قبل الخصم) لجميع المنتجات في السلة
   const subTotal = cart.reduce((total, item) => {
-    const cleanPrice = typeof item.price === 'string' 
-      ? parseFloat(item.price.replace(/[^\d.]/g, '')) 
-      : Number(item.price);
+    const savedProducts = JSON.parse(localStorage.getItem('store_products')) || [];
+    const originalProduct = savedProducts.find(p => p.id === item.id);
+    
+    const discountPercent = Number(item.discount) || 0;
+    const originalPrice = originalProduct 
+      ? Number(originalProduct.price) 
+      : (discountPercent > 0 ? Math.round(Number(item.price) / (1 - discountPercent / 100)) : Number(item.price));
+      
     const qty = Number(item.quantity) || 1;
-    return total + (cleanPrice * qty);
+    return total + (originalPrice * qty);
   }, 0);
 
-  // 2. حساب إجمالي الخصم/التوفير اللي الزبون كسبه (الفارق بين السعر الأصلي والمخفض)
+  // 🌟 2. إجمالي الخصم/التوفير: الفارق الحقيقي المخصوم بين السعر الأصلي والمخفض
   const totalDiscount = cart.reduce((total, item) => {
     const discountPercent = Number(item.discount) || 0;
     if (discountPercent > 0) {
       const savedProducts = JSON.parse(localStorage.getItem('store_products')) || [];
       const originalProduct = savedProducts.find(p => p.id === item.id);
-      const originalPrice = originalProduct ? Number(originalProduct.price) : (item.price / (1 - discountPercent / 100));
+      const originalPrice = originalProduct ? Number(originalProduct.price) : (Number(item.price) / (1 - discountPercent / 100));
       
-      const cleanPrice = typeof item.price === 'string' 
-        ? parseFloat(item.price.replace(/[^\d.]/g, '')) 
-        : Number(item.price);
-      
+      const cleanPrice = Number(item.price);
       const savingsPerItem = Math.max(0, Math.round(originalPrice - cleanPrice));
       return total + (savingsPerItem * (Number(item.quantity) || 1));
     }
     return total;
   }, 0);
+  // 3. تحديد مصاريف الشحن ديناميكياً بناءً على السعر النهائي الفعلي للسلع (بعد الخصم)
+  const finalItemsPrice = subTotal - totalDiscount;
+  const shippingCost = finalItemsPrice >= 3000 || finalItemsPrice === 0 ? 0 : 50;
 
-  // 3. تحديد مصاريف الشحن ديناميكياً
-  const shippingCost = subTotal >= 3000 || subTotal === 0 ? 0 : 50;
-
-  // 4. المجموع الكلي النهائي
-  const totalPrice = subTotal + shippingCost;
+  // 🌟 4. الإجمالي الكلي النهائي الصحيح = (المجموع الفرعي الأصلي - الخصم) + الشحن
+  const totalPrice = (subTotal - totalDiscount) + shippingCost;
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -78,7 +80,7 @@ export default function Cart() {
     title: { fontSize: isMobile ? '28px' : '36px', fontWeight: '900', color: '#fff', marginBottom: isMobile ? '24px' : '40px', borderRight: '4px solid #3b82f6', paddingRight: '16px' },
     grid: { display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '32px', alignItems: 'start', position: 'relative', zIndex: 2 },
     cartList: { display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, width: '100%' },
-    cartItem: { background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.06)', padding: '16px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', width: '100%', boxSizing: 'border-box' },
+    cartItem: { background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.06)', padding: '16px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyNavigation: 'space-between', gap: '16px', width: '100%', boxSizing: 'border-box' },
     itemImage: { width: isMobile ? '64px' : '80px', height: isMobile ? '64px' : '80px', objectFit: 'cover', borderRadius: '16px', background: '#0f172a' },
     qtyContainer: { display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '6px 14px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.05)' },
     qtyBtn: { background: 'transparent', border: 'none', color: '#60a5fa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' },
@@ -92,18 +94,54 @@ export default function Cart() {
     input: { width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', color: '#fff', marginTop: '8px', marginBottom: '16px', outline: 'none', boxSizing: 'border-box' }
   };
 
-  if (cart.length === 0) {
+   if (cart.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: isMobile ? '64px 0' : '96px 0', direction: 'rtl', position: 'relative' }}>
-        <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', width: '96px', height: '96px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto', color: '#60a5fa' }}>
-          <ShoppingBag size={48} />
+      <div style={{ textAlign: 'center', padding: isMobile ? '80px 0' : '120px 0', direction: 'rtl', position: 'relative' }}>
+        {/* هالة إضاءة خلفية ناعمة */}
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(59,130,246,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          {/* 🌟 الدائرة الزجاجية المحدثة: الأيقونة في النص الهندسي المطلق والقاتل بالملّي */}
+          <div style={{ 
+            background: 'rgba(59, 130, 246, 0.08)', 
+            border: '1px solid rgba(59, 130, 246, 0.25)', 
+            width: '96px', 
+            height: '96px', 
+            borderRadius: '50%', 
+            margin: '0 auto 24px auto', 
+            color: '#60a5fa', 
+            boxShadow: '0 0 25px rgba(59, 130, 246, 0.12)',
+            position: 'relative', // تمكين التموضع المطلق للأيقونة بالداخل
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)', // سنترة مطلقة تخترق أي ترحيل افتراضي
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%',
+              padding: 0,
+              margin: 0,
+              lineHeight: 0
+            }}>
+              <ShoppingBag size={42} style={{ display: 'block', margin: 0, padding: 0 }} />
+            </div>
+          </div>
+
+          <h2 style={{ fontSize: isMobile ? '26px' : '32px', fontWeight: '900', color: '#fff', letterSpacing: '-0.5px' }}>سلة المشتريات فارغة</h2>
+          <p style={{ color: '#94a3b8', marginTop: '12px', marginBottom: '36px', fontSize: isMobile ? '16px' : '18px', maxWidth: '400px', marginInline: 'auto', lineHeight: 1.6 }}>يبدو أنك لم تقم بإضافة أي منتجات إلى سلتك بعد. دعنا نساعدك في العثور على ما تحتاجه!</p>
+          <Link to="/shop" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: '#fff', padding: '16px 36px', borderRadius: '16px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3)', transition: 'all 0.3s ease' }}>تصفح المنتجات الآن</Link>
         </div>
-        <h2 style={{ fontSize: isMobile ? '26px' : '32px', fontWeight: '900', color: '#fff' }}>سلة المشتريات فارغة</h2>
-        <p style={{ color: '#94a3b8', marginTop: '8px', marginBottom: '32px', fontSize: isMobile ? '16px' : '18px' }}>يبدو أنك لم تقم بإضافة أي منتجات إلى سلتك بعد.</p>
-        <Link to="/shop" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: '#fff', padding: '14px 32px', borderRadius: '14px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3)' }}>تصفح المنتجات الآن</Link>
       </div>
     );
   }
+
   return (
     <div style={styles.container}>
       {/* هالات الإضاءة الخلفية الناعمة */}
@@ -164,7 +202,7 @@ export default function Cart() {
             </span>
           </div>
 
-          {/* 🌟 سطر إجمالي الخصم والتوفير الجديد مضاف هنا تحت الشحن مباشرة */}
+          {/* سطر إجمالي الخصم والتوفير يظهر باللون الأحمر تحت الشحن مباشرة */}
           {totalDiscount > 0 && (
             <div style={{ ...styles.summaryRow, borderBottom: '1px solid rgba(244, 63, 94, 0.2)' }}>
               <span style={{ color: '#f43f5e', fontWeight: '600' }}>إجمالي الخصم (توفير)</span>
