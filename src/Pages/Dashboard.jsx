@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { DashboardContext } from '../context/DashboardContext';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Trash2, ShoppingBag, DollarSign, Package, ClipboardList, Check, Clock, Lock, CheckCircle, AlertTriangle, Edit3, MessageSquare } from 'lucide-react';
+import { PlusCircle, Trash2, ShoppingBag, DollarSign, Package, ClipboardList, Check, Clock, Lock, CheckCircle, AlertTriangle, Edit3, MessageSquare, TrendingUp, Percent } from 'lucide-react';
 
 export default function Dashboard() {
   const { products, orders, addProduct, deleteProduct, setProducts, messages } = useContext(DashboardContext);
@@ -11,14 +11,50 @@ export default function Dashboard() {
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState(false);
   const [toast, setToast] = useState({ message: null, type: 'success' });
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: 'إلكترونيات' });
+  
+  // 🌟 تحديث الفورم ليشمل سعر التكلفة/الجملة الجديد لحساباتك
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', costPrice: '', image: '', category: 'إلكترونيات' });
   const [isEditing, setIsEditing] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
 
+  // 🌟 نظام الحسابات المالي المطور والدقيق 📈
   const totalSales = orders ? orders.reduce((sum, order) => sum + Number(order.total), 0) : 0;
   const totalOrders = orders ? orders.length : 0;
   const totalProducts = products ? products.length : 0;
-  const totalMessages = messages ? messages.length : 0; // 🌟 إحصائية عدد الرسائل
+  const totalMessages = messages ? messages.length : 0;
+
+  // حساب إجمالي التكلفة الكلية للطلبات
+    // 🌟 تعديل معادلة حساب إجمالي التكلفة الكلية للطلبات لتجنب الـ NaN
+  const totalCost = orders ? orders.reduce((sum, order) => {
+    const orderCost = order.products ? order.products.reduce((pSum, p) => {
+      // حماية: إذا كان السعر الأصلي أو سعر التكلفة غير موجود، نضع حلاً بدعاً مبنياً على الأرقام المتاحة
+      const currentPrice = Number(p.price) || 0;
+      const currentCost = Number(p.costPrice) || Math.round(currentPrice * 0.7); // لو ملوش سعر تكلفة قديم نعتبره 70% من سعر البيع
+      const currentQty = Number(p.quantity) || 1;
+      
+      return pSum + (currentCost * currentQty);
+    }, 0) : 0;
+    return sum + orderCost;
+  }, 0) : 0;
+
+  // صافي الأرباح المالي = إجمالي المبيعات - إجمالي تكلفة البضاعة المباعة
+    // 🌟 المعادلة الصحيحة: الأرباح الصافية الحقيقية للمنتجات فقط (بدون مصاريف الشحن)
+  const netProfit = orders ? orders.reduce((sum, order) => {
+    const orderProfit = order.products ? order.products.reduce((pSum, p) => {
+      const sellPrice = Number(p.price) || 0;
+      const costPrice = Number(p.costPrice) || Math.round(sellPrice * 0.7);
+      const qty = Number(p.quantity) || 1;
+      
+      // ربح المنتج الواحد = (سعر البيع - سعر التكلفة) * الكمية
+      return pSum + ((sellPrice - costPrice) * qty);
+    }, 0) : 0;
+    
+    return sum + orderProfit;
+  }, 0) : 0;
+
+
+  // حساب متوسط قيمة الطلب (الـ Average Order Value)
+  const averageOrderValue = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
 
   useEffect(() => {
     const isAuth = sessionStorage.getItem('isAdminAuth') === 'true';
@@ -36,15 +72,17 @@ export default function Dashboard() {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    if (!newProduct.name || !newProduct.price) return;
+    if (!newProduct.name || !newProduct.price || !newProduct.costPrice) return;
+    
     const parsedPrice = parseFloat(newProduct.price);
+    const parsedCost = parseFloat(newProduct.costPrice);
     
     if (isEditing) {
       if (setProducts) {
-        setProducts((prev) => prev.map((p) => (p.id === editingProductId ? { ...newProduct, price: parsedPrice, id: editingProductId } : p)));
+        setProducts((prev) => prev.map((p) => (p.id === editingProductId ? { ...newProduct, price: parsedPrice, costPrice: parsedCost, id: editingProductId } : p)));
       } else {
         const savedProducts = JSON.parse(localStorage.getItem('store_products')) || [];
-        const updated = savedProducts.map((p) => (p.id === editingProductId ? { ...newProduct, price: parsedPrice, id: editingProductId } : p));
+        const updated = savedProducts.map((p) => (p.id === editingProductId ? { ...newProduct, price: parsedPrice, costPrice: parsedCost, id: editingProductId } : p));
         localStorage.setItem('store_products', JSON.stringify(updated));
         window.location.reload();
         return;
@@ -53,14 +91,20 @@ export default function Dashboard() {
       setIsEditing(false);
       setEditingProductId(null);
     } else {
-      addProduct({ ...newProduct, price: parsedPrice });
+      addProduct({ ...newProduct, price: parsedPrice, costPrice: parsedCost });
       triggerToast(`تمت إضافة المنتَج "${newProduct.name}" بنجاح! 🚀`, 'success');
     }
-    setNewProduct({ name: '', price: '', image: '', category: 'إلكترونيات' });
+    setNewProduct({ name: '', price: '', costPrice: '', image: '', category: 'إلكترونيات' });
   };
 
   const handleEditClick = (product) => {
-    setNewProduct({ name: product.name, price: product.price, image: product.image || '', category: product.category || 'إلكترونيات' });
+    setNewProduct({ 
+      name: product.name, 
+      price: product.price, 
+      costPrice: product.costPrice || Math.round(Number(product.price) * 0.7), 
+      image: product.image || '', 
+      category: product.category || 'إلكترونيات' 
+    });
     setIsEditing(true);
     setEditingProductId(product.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -132,65 +176,85 @@ export default function Dashboard() {
         </div>
       )}
 
-      <h1 style={styles.title}>لوحة تحكم المتجر</h1>
+      <h1 style={styles.title}>لوحة تحكم المتجر والحسابات</h1>
       
-      {/* شبكة الإحصائيات السريعة الزجاجية */}
-      <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <div style={{ ...styles.statIcon, background: 'rgba(52, 211, 153, 0.1)', color: '#34d399' }}>
-            <DollarSign size={28} />
-          </div>
-          <div>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>إجمالي المبيعات</p>
-            <h3 style={{ fontSize: '24px', fontWeight: '900', marginTop: '4px' }}>{totalSales} جنيه</h3>
-          </div>
-        </div>
-
+      {/* شبكة الإحصائيات المالية المخططة والمطورة زجاجياً */}
+      <div style={{ ...styles.statsGrid, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         <div style={styles.statCard}>
           <div style={{ ...styles.statIcon, background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa' }}>
-            <ShoppingBag size={28} />
+            <DollarSign size={24} />
           </div>
           <div>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>عدد الطلبات</p>
-            <h3 style={{ fontSize: '24px', fontWeight: '900', marginTop: '4px' }}>{totalOrders} طلب</h3>
+            <p style={{ color: '#94a3b8', fontSize: '13px' }}>إجمالي المبيعات</p>
+            <h3 style={{ fontSize: '20px', fontWeight: '900', marginTop: '4px' }}>{totalSales} ج</h3>
           </div>
         </div>
 
+        {/* 🌟 بطاقة صافي الأرباح المالي المشع */}
+        <div style={{ ...styles.statCard, border: '1px solid rgba(52, 211, 153, 0.2)', background: 'rgba(16, 185, 129, 0.05)' }}>
+          <div style={{ ...styles.statIcon, background: 'rgba(52, 211, 153, 0.15)', color: '#34d399' }}>
+            <TrendingUp size={24} />
+          </div>
+          <div>
+            <p style={{ color: '#a7f3d0', fontSize: '13px', fontWeight: 'bold' }}>صافي الأرباح 📈</p>
+            <h3 style={{ fontSize: '20px', fontWeight: '900', marginTop: '4px', color: '#34d399' }}>{netProfit} ج</h3>
+          </div>
+        </div>
+
+        {/* 🌟 بطاقة متوسط قيمة الطلب */}
         <div style={styles.statCard}>
           <div style={{ ...styles.statIcon, background: 'rgba(168, 85, 247, 0.1)', color: '#c084fc' }}>
-            <Package size={28} />
+            <Percent size={24} />
           </div>
           <div>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>إجمالي المنتجات</p>
-            <h3 style={{ fontSize: '24px', fontWeight: '900', marginTop: '4px' }}>{totalProducts} منتج</h3>
+            <p style={{ color: '#94a3b8', fontSize: '13px' }}>متوسط قيمة الطلب</p>
+            <h3 style={{ fontSize: '20px', fontWeight: '900', marginTop: '4px' }}>{averageOrderValue} ج</h3>
           </div>
         </div>
 
-        {/* بطاقة إحصاء الرسائل الجديدة */}
         <div style={styles.statCard}>
           <div style={{ ...styles.statIcon, background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e' }}>
-            <MessageSquare size={28} />
+            <ShoppingBag size={24} />
           </div>
           <div>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>رسائل العملاء</p>
-            <h3 style={{ fontSize: '24px', fontWeight: '900', marginTop: '4px' }}>{totalMessages} رسالة</h3>
+            <p style={{ color: '#94a3b8', fontSize: '13px' }}>عدد الطلبات</p>
+            <h3 style={{ fontSize: '20px', fontWeight: '900', marginTop: '4px' }}>{totalOrders} طلب</h3>
+          </div>
+        </div>
+
+        <div style={styles.statCard}>
+          <div style={{ ...styles.statIcon, background: 'rgba(234, 179, 8, 0.1)', color: '#eab308' }}>
+            <MessageSquare size={24} />
+          </div>
+          <div>
+            <p style={{ color: '#94a3b8', fontSize: '13px' }}>رسائل العملاء</p>
+            <h3 style={{ fontSize: '20px', fontWeight: '900', marginTop: '4px' }}>{totalMessages} رسالة</h3>
           </div>
         </div>
       </div>
 
       <div style={styles.sectionsGrid}>
-        {/* نموذج إضافة وتعديل المنتج الزجاجي */}
+        {/* نموذج إضافة وتعديل المنتج الزجاجي المالي */}
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>
             <PlusCircle size={22} color="#3b82f6" /> 
-            {isEditing ? 'تعديل بيانات المنتج الحالي' : 'إضافة منتج جديد'}
+            {isEditing ? 'تعديل بيانات المنتج المالي' : 'إضافة منتج استثماري جديد'}
           </h2>
           <form onSubmit={handleFormSubmit}>
             <label style={{ fontSize: '14px', color: '#cbd5e1' }}>اسم المنتج</label>
             <input type="text" name="name" required value={newProduct.name} onChange={handleInputChange} style={styles.input} placeholder="مثال: سماعة رأس لاسلكية" />
 
-            <label style={{ fontSize: '14px', color: '#cbd5e1' }}>السعر (جنيه)</label>
-            <input type="number" name="price" required value={newProduct.price} onChange={handleInputChange} style={styles.input} placeholder="مثال: 1500" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={{ fontSize: '14px', color: '#cbd5e1' }}>سعر البيع (جنيه)</label>
+                <input type="number" name="price" required value={newProduct.price} onChange={handleInputChange} style={styles.input} placeholder="مثال: 1500" />
+              </div>
+              <div>
+                {/* 🌟 حقل إدخال سعر التكلفة/الجملة لحساب الأرباح بدقة */}
+                <label style={{ fontSize: '14px', color: '#34d399', fontWeight: 'bold' }}>سعر الجملة/التكلفة (ج)</label>
+                <input type="number" name="costPrice" required value={newProduct.costPrice} onChange={handleInputChange} style={{ ...styles.input, border: '1px solid rgba(52, 211, 153, 0.3)' }} placeholder="مثال: 1000" />
+              </div>
+            </div>
 
             <label style={{ fontSize: '14px', color: '#cbd5e1' }}>رابط صورة المنتج (URL)</label>
             <input type="text" name="image" value={newProduct.image} onChange={handleInputChange} style={styles.input} placeholder="https://example.com" />
@@ -204,38 +268,43 @@ export default function Dashboard() {
             </select>
 
             <button type="submit" style={styles.submitBtn}>
-              {isEditing ? 'تحديث بيانات المنتج' : 'حفظ ونشر المنتج'}
+              {isEditing ? 'تحديث بيانات المنتج المالية' : 'حفظ ونشر المنتج المالي'}
             </button>
 
             {isEditing && (
-              <button type="button" onClick={() => { setIsEditing(false); setEditingProductId(null); setNewProduct({ name: '', price: '', image: '', category: 'إلكترونيات' }); }} style={{ ...styles.submitBtn, background: '#334155', marginTop: '12px' }}>إلغاء التعديل</button>
+              <button type="button" onClick={() => { setIsEditing(false); setEditingProductId(null); setNewProduct({ name: '', price: '', costPrice: '', image: '', category: 'إلكترونيات' }); }} style={{ ...styles.submitBtn, background: '#334155', marginTop: '12px' }}>إلغاء التعديل المالي</button>
             )}
           </form>
         </div>
-
         {/* إدارة المنتجات الحالية داخل صندوق زجاجي محدد أنيق ومريح للتمرير */}
         <div style={styles.card}>
           <h2 style={styles.cardTitle}><Package size={22} color="#c084fc" /> المنتجات المتاحة ({products ? products.length : 0})</h2>
           <div style={styles.list}>
-            {products && products.map((product) => (
-              <div key={product.id} style={styles.item}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  {product.image && <img src={product.image} alt={product.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px' }} />}
-                  <div>
-                    <h4 style={{ fontWeight: 'bold', fontSize: '15px' }}>{product.name}</h4>
-                    <p style={{ color: '#60a5fa', fontSize: '13px', marginTop: '2px' }}>{product.price} جنيه</p>
+            {products && products.map((product) => {
+              const profitExpect = Number(product.price) - (Number(product.costPrice) || 0);
+              return (
+                <div key={product.id} style={styles.item}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {product.image && <img src={product.image} alt={product.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px' }} />}
+                    <div>
+                      <h4 style={{ fontWeight: 'bold', fontSize: '15px' }}>{product.name}</h4>
+                      <p style={{ color: '#60a5fa', fontSize: '13px', marginTop: '2px' }}>
+                        البيع: {product.price} ج | <span style={{ color: '#34d399' }}>الربح: {profitExpect} ج</span>
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={() => handleEditClick(product)} style={{ color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }} title="تعديل"><Edit3 size={16} /></button>
+                    <button onClick={() => handleDeleteProduct(product.id, product.name)} style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }} title="حذف"><Trash2 size={16} /></button>
                   </div>
                 </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <button onClick={() => handleEditClick(product)} style={{ color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }} title="تعديل"><Edit3 size={16} /></button>
-                  <button onClick={() => handleDeleteProduct(product.id, product.name)} style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }} title="حذف"><Trash2 size={16} /></button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
+
       {/* جدول طلبات العملاء الزجاجي الحقيقي */}
       <div style={{ ...styles.card, marginTop: '40px' }}>
         <h2 style={styles.cardTitle}><ClipboardList size={22} color="#34d399" /> طلبات العملاء الحية ({orders ? orders.length : 0})</h2>
@@ -273,7 +342,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* جدول عرض رسائل تواصل العملاء الزجاجي الجديد */}
+      {/* جدول عرض رسائل تواصل العملاء الزجاجي */}
       <div style={{ ...styles.card, marginTop: '40px' }}>
         <h2 style={styles.cardTitle}><MessageSquare size={22} color="#f43f5e" /> بريد رسائل الزبائن الحية ({messages ? messages.length : 0})</h2>
         <div style={{ overflowX: 'auto', marginTop: '16px' }}>

@@ -6,7 +6,12 @@ export const DashboardContext = createContext();
 export const DashboardProvider = ({ children }) => {
   const [products, setProducts] = useState(() => {
     const savedProducts = localStorage.getItem('store_products');
-    return savedProducts ? JSON.parse(savedProducts) : initialProducts;
+    // إضافة سعر تكلفة افتراضي للمنتجات القديمة لتجنب الأخطاء البرمجية
+    if (savedProducts) {
+      const parsed = JSON.parse(savedProducts);
+      return parsed.map(p => ({ ...p, costPrice: p.costPrice || Math.round(Number(p.price) * 0.7) }));
+    }
+    return initialProducts.map(p => ({ ...p, costPrice: p.costPrice || Math.round(Number(p.price) * 0.7) }));
   });
 
   const [orders, setOrders] = useState(() => {
@@ -14,7 +19,6 @@ export const DashboardProvider = ({ children }) => {
     return savedOrders ? JSON.parse(savedOrders) : [];
   });
 
-  // 🌟 إدارة رسائل العملاء الحية القادمة من صفحة اتصل بنا
   const [messages, setMessages] = useState(() => {
     const savedMessages = localStorage.getItem('store_messages');
     return savedMessages ? JSON.parse(savedMessages) : [];
@@ -28,13 +32,18 @@ export const DashboardProvider = ({ children }) => {
     localStorage.setItem('store_orders', JSON.stringify(orders));
   }, [orders]);
 
-  // 🌟 مزامنة الرسائل مع الـ LocalStorage
   useEffect(() => {
     localStorage.setItem('store_messages', JSON.stringify(messages));
   }, [messages]);
 
+  // 🌟 تعديل دالة الإضافة لتشمل تكلفة المنتج الأصلي
   const addProduct = (newProduct) => {
-    setProducts((prev) => [...prev, { ...newProduct, id: Date.now() }]);
+    setProducts((prev) => [...prev, { 
+      ...newProduct, 
+      id: Date.now(),
+      price: Number(newProduct.price),
+      costPrice: Number(newProduct.costPrice) // سعر الجملة/التكلفة
+    }]);
   };
 
   const deleteProduct = (id) => {
@@ -46,14 +55,21 @@ export const DashboardProvider = ({ children }) => {
       id: `ORD-${Date.now()}`,
       date: new Date().toLocaleDateString('ar-EG'),
       customer: orderData.customer,
-      products: orderData.products,
+      // 🌟 حفظ سعر التكلفة والبيع للمنتجات وقت الشراء بدقة لحساب الأرباح لاحقاً
+      products: orderData.products.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: Number(item.price),
+        costPrice: Number(item.costPrice) || Math.round(Number(item.price) * 0.7),
+        quantity: item.quantity,
+        category: item.category
+      })),
       total: orderData.total,
       status: 'قيد المراجعة'
     };
     setOrders((prev) => [newOrder, ...prev]);
   };
 
-  // 🌟 دالة استقبال وحفظ الرسائل الجديدة
   const addMessage = (msgData) => {
     const newMessage = {
       id: `MSG-${Date.now()}`,
