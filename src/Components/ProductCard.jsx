@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Check } from 'lucide-react';
+import { ShoppingBag, Check } from 'lucide-react';
 import { CartContext } from '../context/CartContext';
 
 export default function ProductCard({ product }) {
@@ -49,7 +49,7 @@ export default function ProductCard({ product }) {
       transform: isHovered ? 'scale(1.05)' : 'scale(1)',
       transition: 'transform 0.5s ease'
     },
-    // 🌟 شارة جديد الزجاجية الزرقاء مثبتة بشكل أنيق على الشمال
+    // شارة جديد الزجاجية الزرقاء مثبتة بشكل أنيق على الشمال
     newBadge: { 
       position: 'absolute', 
       top: '12px', 
@@ -65,7 +65,7 @@ export default function ProductCard({ product }) {
       borderRadius: '50px',
       zIndex: 10
     },
-    // 🌟 شارة الخصم الزجاجية الحمراء مثبتة بشكل ثابت على اليمين
+    // شارة الخصم الزجاجية الحمراء مثبتة بشكل ثابت على اليمين
     discountBadge: { 
       position: 'absolute', 
       top: '12px', 
@@ -81,8 +81,6 @@ export default function ProductCard({ product }) {
       borderRadius: '50px',
       zIndex: 10
     },
-    // نقل زر الـ Wishlist (القلب) ليكون في المنتصف العلوي أو بجانب الشارات لعدم التداخل
-    wishlist: { position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(4px)', color: '#fff', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none', transition: '0.2s', zIndex: 10 },
     info: { padding: '16px 16px 0 16px', direction: 'rtl' },
     title: { fontSize: '18px', fontWeight: 'bold', color: '#fff', textDecoration: 'none', transition: '0.2s' },
     category: { fontSize: '12px', color: '#60a5fa', fontWeight: '700', marginBottom: '6px' },
@@ -119,17 +117,16 @@ export default function ProductCard({ product }) {
     >
       <div>
         <div style={styles.imageBox}>
-          {/* 🌟 عرض شارة الخصم على اليمين إذا وُجدت */}
+          {/* عرض شارة الخصم على اليمين إذا وُجدت */}
           {discountPercent > 0 && (
             <span style={styles.discountBadge}>خصم {discountPercent}%</span>
           )}
 
-          {/* 🌟 عرض شارة جديد على الشمال بناءً على تفعيلها من لوحة التحكم */}
+          {/* عرض شارة جديد على الشمال بناءً على تفعيلها من لوحة التحكم */}
           {hasNewBadge && (
             <span style={styles.newBadge}>جديد</span>
           )}
 
-          <button style={styles.wishlist}><Heart size={16} /></button>
           <Link to={`/product/${product.id}`}>
             <img src={product.image} alt={product.name} style={styles.image} />
           </Link>
