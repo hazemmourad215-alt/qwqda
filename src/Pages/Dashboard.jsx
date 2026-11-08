@@ -1,20 +1,23 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { DashboardContext } from '../context/DashboardContext';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Trash2, ShoppingBag, DollarSign, Package, ClipboardList, Check, Clock, CheckCircle, AlertTriangle, Edit3, MessageSquare, TrendingUp, Percent } from 'lucide-react';
+import { PlusCircle, Trash2, ShoppingBag, DollarSign, Package, ClipboardList, Check, Clock, Lock, CheckCircle, AlertTriangle, Edit3, MessageSquare, TrendingUp, Percent } from 'lucide-react';
 
 export default function Dashboard() {
   const { products, orders, addProduct, deleteProduct, setProducts, messages } = useContext(DashboardContext);
   const navigate = useNavigate();
 
-  const [toast, setToast] = useState({ message: null, type: 'success' });
+  // 🌟 إرجاع نظام حماية كلمة المرور الفاخر
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState(false);
   
-  // 🌟 إضافة المتغير الحركي isNewBadge ليكون true افتراضياً بداخل الاستمارة
+  const [toast, setToast] = useState({ message: null, type: 'success' });
   const [newProduct, setNewProduct] = useState({ name: '', price: '', costPrice: '', discount: '0', isNewBadge: true, image: '', category: 'إلكترونيات' });
   const [isEditing, setIsEditing] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
 
-  // إحصائيات مالية مطورة ومحسوبة زجاجياً
+  // نظام الحسابات المالي
   const totalSales = orders ? orders.reduce((sum, order) => sum + Number(order.total), 0) : 0;
   const totalOrders = orders ? orders.length : 0;
   const totalProducts = products ? products.length : 0;
@@ -32,8 +35,13 @@ export default function Dashboard() {
 
   const averageOrderValue = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
 
+  // 🌟 قراءة حالة تسجيل الدخول من ذاكرة الجلسة فور فتح الصفحة
+  useEffect(() => {
+    const isAuth = sessionStorage.getItem('isAdminAuth') === 'true';
+    if (isAuth) setIsAuthenticated(true);
+  }, []);
+
   const handleInputChange = (e) => {
-    // 🌟 دعم خانة الـ Checkbox لقراءة الاختيار اللحظي بنعم أو لا
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setNewProduct({ ...newProduct, [e.target.name]: value });
   };
@@ -90,7 +98,21 @@ export default function Dashboard() {
     triggerToast(`تم حذف المنتَج "${name}" من المتجر 🗑️`, 'error');
   };
 
+  // 🌟 دالة التحقق من الباسورد وحفظ الجلسة
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (passwordInput === 'admin123') {
+      setIsAuthenticated(true);
+      setLoginError(false);
+      sessionStorage.setItem('isAdminAuth', 'true');
+    } else {
+      setLoginError(true);
+    }
+  };
+
   const styles = {
+    lockContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', color: '#fff', direction: 'rtl', padding: '20px' },
+    lockCard: { background: 'rgba(30, 41, 59, 0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.06)', padding: '40px 32px', borderRadius: '24px', width: '100%', maxWidth: '400px', textAlign: 'center', boxSizing: 'border-box', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' },
     container: { maxWidth: '1200px', margin: '0 auto', padding: '40px 20px', direction: 'rtl', color: '#fff', position: 'relative' },
     toastBox: (type) => ({ position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)', background: type === 'success' ? '#065f46' : type === 'info' ? '#1e3a8a' : '#991b1b', border: type === 'success' ? '1px solid #059669' : type === 'info' ? '1px solid #3b82f6' : '1px solid #dc2626', color: type === 'success' ? '#34d399' : type === 'info' ? '#93c5fd' : '#fca5a5', padding: '16px 24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', zIndex: 2000, fontWeight: 'bold', fontSize: '15px', backdropFilter: 'blur(8px)' }),
     title: { fontSize: '32px', fontWeight: '900', marginBottom: '32px', borderRight: '4px solid #3b82f6', paddingRight: '16px' },
@@ -105,9 +127,32 @@ export default function Dashboard() {
     list: { display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '420px', overflowY: 'auto', padding: '12px', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)', boxSizing: 'border-box' },
     item: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(30, 41, 59, 0.5)', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.03)' }
   };
-  return (
+
+  // 🌟 إذا لم يكن مسجلاً، اقطع العرض فوراً واظهر كارت القفل المضيء
+  if (!isAuthenticated) {
+    return (
+      <div style={styles.lockContainer}>
+        <div style={styles.lockCard}>
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
+            <Lock size={32} />
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>لوحة تحكم محمية</h2>
+          <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>الرجاء إدخال كلمة مرور الإدارة للمتابعة.</p>
+          <form onSubmit={handleAdminLogin}>
+            <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} style={{ ...styles.input, textAlign: 'center', fontSize: '18px', letterSpacing: '4px' }} placeholder="••••••••" required />
+            {loginError && <p style={{ color: '#f43f5e', fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>⚠️ كلمة المرور خاطئة!</p>}
+            <button type="submit" style={styles.submitBtn}>دخول لوحة التحكم</button>
+          </form>
+          <button onClick={() => navigate('/shop')} style={{ background: 'none', border: 'none', color: '#94a3b8', marginTop: '20px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>العودة للمتجر</button>
+        </div>
+      </div>
+    );
+  }
+    return (
     <div style={styles.container}>
-      
+      {/* هالة إضاءة خلفية ناعمة للداش بورد */}
+      <div style={{ position: 'absolute', top: '50px', left: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+
       {/* صندوق الإشعارات المنبثق المرن */}
       {toast.message && (
         <div style={styles.toastBox(toast.type)}>
@@ -348,3 +393,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
