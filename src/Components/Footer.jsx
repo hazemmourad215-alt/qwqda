@@ -153,9 +153,7 @@ export default function Footer() {
             })}
           </ul>
         </div>
-
-        {/* العمود الثالث: مزايا المنصة الزجاجية */}
-        <div>
+    <div>
           <h3 style={styles.colTitle}>لماذا NexStore؟</h3>
           <ul style={{ ...styles.linkList, gap: '10px' }}>
             <li style={styles.featureItem}><Truck size={16} color="#60a5fa" /> <span>شحن ذكي وسريع للمحافظات</span></li>
@@ -164,7 +162,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* العمود الرابع: معلومات التواصل */}
         <div>
           <h3 style={styles.colTitle}>قنوات التواصل</h3>
           <div style={styles.contactItem}>
@@ -182,7 +179,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* الشريط السفلي للحقوق */}
       <div style={styles.bottomBar}>
        <p>جميع الحقوق محفوظة © 2026 NexStore — تم تصميمه بكل إبداع بواسطة **حازم** بواجهات مستقبلية زجاجية فاخرة 🚀🤍</p>
         <div style={{ display: 'flex', gap: '20px' }}>
