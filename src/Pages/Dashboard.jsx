@@ -254,7 +254,7 @@ export default function Dashboard() {
                 style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3b82f6' }}
               />
               <label htmlFor="isNewBadge" style={{ fontSize: '14px', color: '#cbd5e1', cursor: 'pointer', fontWeight: '600', userSelect: 'none' }}>
-                عرض شارة زرقاء مكتوب عليها (جديد) فوق المنتج للمتسوقين
+               جديد
               </label>
             </div>
 
